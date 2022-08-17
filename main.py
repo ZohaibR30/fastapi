@@ -1,8 +1,12 @@
+from operator import ne
 import schemas, models
+from typing import List
 from sqlalchemy.orm import Session 
 from database import SessionLocal, engine
 from fastapi import FastAPI, Depends, status, Response, HTTPException
 from fastapi.responses import JSONResponse
+from passlib.context import CryptContext 
+
 app = FastAPI()
 
 models.Base.metadata.create_all(engine)
@@ -63,12 +67,12 @@ def update(id, req: schemas.Blog, db: Session = Depends(getDb)):
         return JSONResponse(content = {"message": 'Updation Done'})
 
 
-@app.get('/blog')
+@app.get('/blog', response_model = List[schemas.showBlog])
 def all(db: Session = Depends(getDb)):
     blogs = db.query(models.Blog).all()
     return blogs
 
-@app.get('/blog/{id}', status_code = 200)
+@app.get('/blog/{id}', status_code = 200, response_model = schemas.showBlog)
 def show(id, res: Response, db: Session = Depends(getDb)):
     blog = db.query(models.Blog).filter(models.Blog.id == id).first()
 
@@ -82,3 +86,14 @@ def show(id, res: Response, db: Session = Depends(getDb)):
         )
 
     return blog
+
+pwd_cxt = CryptContext(schemes = ["bcrypt"], deprecated = "auto")
+
+@app.post('/user')
+def createUser(req: schemas.User, db: Session = Depends(getDb)):
+    hashedPassword = pwd_cxt.hash(req.password)
+    newUser = models.User(name = req.name, email = req.email, password = hashedPassword)
+    db.add(newUser)
+    db.commit()
+    db.refresh(newUser)
+    return newUser
