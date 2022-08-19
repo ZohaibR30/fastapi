@@ -1,3 +1,7 @@
+import sys
+sys.path.append("..")
+
+from oauth2 import get_current_user
 import schemas
 
 from repository import blog
@@ -8,11 +12,11 @@ from fastapi import APIRouter, Depends, status
 
 router = APIRouter(
     prefix = "/blog",
-    tags = ['blogs']
+    tags = ['Blogs']
 )
 
 @router.get('/', response_model = List[schemas.showBlog])
-def all(db: Session = Depends(getDb)):
+def all(db: Session = Depends(getDb), get_current_user: schemas.User = Depends(get_current_user)):
     return blog.getAll(db)
 
 @router.post('/', status_code = status.HTTP_201_CREATED)

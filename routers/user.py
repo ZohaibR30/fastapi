@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends
 
 router = APIRouter(
     prefix = "/user",
-    tags = ['users']
+    tags = ['Users']
 )
 
 @router.post('/', response_model = schemas.showUser)
